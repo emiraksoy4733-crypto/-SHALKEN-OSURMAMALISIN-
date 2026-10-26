@@ -1,0 +1,92 @@
+name: Proje Yukle
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Indir, kokekle ve ayarlari duzelt
+        run: |
+          set -e
+          for i in 1 2 3; do
+            curl -s -A "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36" -c cj.txt "https://files.fm/" -o /dev/null
+            SID=$(grep PHPSESSID cj.txt | awk '{print $NF}')
+            curl -sL --fail -A "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 Chrome/120 Mobile Safari/537.36" -e "https://files.fm/u/zr7z779my7n5t3uc" -b cj.txt -o proj.zip "https://files.fm/down.php?i=9m3fq9v8xsz8pvv8&PHPSESSID=$SID&n=BaldiMod_Mobile_UnityProject.zip"
+            if unzip -t proj.zip > /dev/null 2>&1; then break; fi
+            sleep 5
+          done
+          unzip -t proj.zip > /dev/null
+          unzip -q proj.zip -d _src
+          SRC=""
+          while IFS= read -r -d '' d; do SRC="$(dirname "$d")"; break; done < <(find ./_src -type d -name ProjectSettings -print0)
+          test -n "$SRC"
+          WORK=$(mktemp -d)
+          cp -r "$SRC/Assets" "$WORK/"
+          cp -r "$SRC/ProjectSettings" "$WORK/"
+          cp -r "$SRC/Packages" "$WORK/"
+          [ -d "$SRC/OptionalPackages" ] && cp -r "$SRC/OptionalPackages" "$WORK/" || true
+          [ -d "$SRC/Extras" ] && cp -r "$SRC/Extras" "$WORK/" || true
+          PS="$WORK/ProjectSettings/ProjectSettings.asset"
+          sed -i 's/^\([[:space:]]*\)AndroidTargetArchitectures: 0$/\1AndroidTargetArchitectures: 3/' "$PS"
+          sed -i 's/^\([[:space:]]*\)scriptingBackend: {}$/\1scriptingBackend:\n\1  Android: 1/' "$PS"
+          sed -i 's/^\([[:space:]]*\)applicationIdentifier: {}$/\1applicationIdentifier:\n\1  Android: com.shalken.mobilport/' "$PS"
+          sed -i 's/^\([[:space:]]*\)AndroidBundleVersionCode: [0-9]*$/\1AndroidBundleVersionCode: 3/' "$PS"
+          sed -i 's/^\([[:space:]]*\)bundleVersion: 1.4.3$/\1bundleVersion: 1.5.0/' "$PS"
+          for RIG in "$WORK/Assets/Mobile Controll Folder/CF2-Rig.prefab" "$WORK/Assets/Resources/CF2-Rig.prefab"; do
+            sed -i 's/startFadedOut: 1/startFadedOut: 0/g' "$RIG"
+            sed -i 's/fadeOutWhenReleased: 1/fadeOutWhenReleased: 0/g' "$RIG"
+            sed -i 's/disableWhenTouchScreenInactive: 1/disableWhenTouchScreenInactive: 0/g' "$RIG"
+            sed -i 's/mobileModeRelation: 0/mobileModeRelation: 2/g' "$RIG"
+            sed -i '/--- !u!1 &2189370472960776922/,/^--- / s/m_IsActive: 0/m_IsActive: 1/' "$RIG"
+            sed -i '/--- !u!114 &2608827268978277332/,/^--- / s/m_Enabled: 1/m_Enabled: 0/' "$RIG"
+            sed -i '/--- !u!114 &2608827268978277332/,/^--- / s/m_Color: {r: 1, g: 1, b: 1, a: 1}/m_Color: {r: 1, g: 1, b: 1, a: 0}/' "$RIG"
+            sed -i '/--- !u!114 &2608827268978277332/,/^--- / s/m_RaycastTarget: 1/m_RaycastTarget: 0/' "$RIG"
+          done
+          TPL="$WORK/Assets/Material/LiberationSans SDF Material.mat"
+          cp "$TPL" "$WORK/Assets/Material/COMIC Material.mat"
+          cp "$TPL" "$WORK/Assets/Material/COMIC_Pro Material.mat"
+          sed -i -e 's/54619c8f610373646824594f6430fc1d/705b8dc6cc4671948990fd4acebb848d/g' -e 's/_GradientScale: 10/_GradientScale: 3/' -e 's/_ScaleRatioA: 0.9/_ScaleRatioA: 0.666667/' -e 's/_TextureWidth: 1024/_TextureWidth: 256/' -e 's/_TextureHeight: 1024/_TextureHeight: 512/' -e 's/  m_Name: .*/  m_Name: COMIC Material/' "$WORK/Assets/Material/COMIC Material.mat"
+          sed -i -e 's/54619c8f610373646824594f6430fc1d/565e3de373d52ab439f77324753b5858/g' -e 's/_GradientScale: 10/_GradientScale: 3/' -e 's/_ScaleRatioA: 0.9/_ScaleRatioA: 0.666667/' -e 's/_TextureWidth: 1024/_TextureWidth: 128/' -e 's/_TextureHeight: 1024/_TextureHeight: 256/' -e 's/  m_Name: .*/  m_Name: COMIC_Pro Material/' "$WORK/Assets/Material/COMIC_Pro Material.mat"
+          for M in "COMIC Atlas.png.meta" "COMIC_Pro Atlas.png.meta"; do
+            [ -f "$WORK/Assets/Texture2D/$M" ] && sed -i 's/textureCompression: 2/textureCompression: 0/g' "$WORK/Assets/Texture2D/$M" || true
+          done
+          rm -rf ./*
+          cp -r "$WORK/." .
+          rm -rf "$WORK"
+
+      - name: Dogrula
+        run: |
+          set -e
+          grep -q "AndroidTargetArchitectures: 3" ProjectSettings/ProjectSettings.asset
+          grep -A1 "scriptingBackend" ProjectSettings/ProjectSettings.asset | grep -q "Android: 1"
+          grep -A1 "applicationIdentifier" ProjectSettings/ProjectSettings.asset | grep -q "Android: com.shalken.mobilport"
+          grep -q "AndroidBundleVersionCode: 3" ProjectSettings/ProjectSettings.asset
+          grep -q "bundleVersion: 1.5.0" ProjectSettings/ProjectSettings.asset
+          for RIG in "Assets/Mobile Controll Folder/CF2-Rig.prefab" "Assets/Resources/CF2-Rig.prefab"; do
+            grep -q "startFadedOut: 0" "$RIG"
+            grep -q "mobileModeRelation: 2" "$RIG"
+            sed -n '/--- !u!1 &2189370472960776922/,/^--- /p' "$RIG" | grep -q "m_IsActive: 1"
+            sed -n '/--- !u!114 &2608827268978277332/,/^--- /p' "$RIG" | grep -q "m_Enabled: 0"
+          done
+          grep -q "6e0a35a02106bc4478b3033aaa288229" "Assets/Material/COMIC Material.mat"
+          grep -q "_GradientScale: 3" "Assets/Material/COMIC Material.mat"
+          grep -q "705b8dc6cc4671948990fd4acebb848d" "Assets/Material/COMIC Material.mat"
+          grep -q "565e3de373d52ab439f77324753b5858" "Assets/Material/COMIC_Pro Material.mat"
+          if grep -rl "5b9a9f6ac48e5a14b8a8b7589120b037" Assets --include="*.mat" | grep -q .; then echo "BITMAP SHADER KALDI"; exit 1; fi
+          grep -q "textureCompression: 0" "Assets/Texture2D/COMIC Atlas.png.meta"
+          grep -q "textureCompression: 0" "Assets/Texture2D/COMIC_Pro Atlas.png.meta"
+          echo "TUM KONTROLLER GECTI"
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "Mobil ayarlar: IL2CPP, CF2 panel acik, SDF yazi duzeltmesi" || echo "degisiklik yok"
+          git push
