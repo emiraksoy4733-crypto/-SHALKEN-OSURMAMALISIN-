@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  serializedVersion: 2
+  m_ObjectHideFlags: 0
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Scene/Warning.unity
+    guid: a4fb558fa059ee748a73b5d52b51631c
+  - enabled: 1
+    path: Assets/Scene/MainMenu.unity
+    guid: ad94287c5870544418e2cd1ec16aac49
+  - enabled: 1
+    path: Assets/Scene/School.unity
+    guid: aa9e4f7eb3e5794fe23d5769764965e7
+  - enabled: 1
+    path: Assets/Scene/GameOver.unity
+    guid: fbed7b3ceadbc5748b7e548541eab3c5
+  - enabled: 1
+    path: Assets/Scene/Results.unity
+    guid: 31648496077fd7741a0addacc0132dd8
+  - enabled: 1
+    path: Assets/Scene/Secret.unity
+    guid: a9f40a33c6992414d809f7cd70fc82a1
+  - enabled: 1
+    path: Assets/Scene/TestRoom.unity
+    guid: 0c081cde8c9f597419bcd4c3b4bc88db
+  - enabled: 1
+    path: Assets/Scene/SecretMode.unity
+    guid: ee678dc8f89ef82f2cd7337e7befe12b
+  - enabled: 1
+    path: Assets/Scene/Double.unity
+    guid: f7306fbd8690112996b316d07e650950
+  - enabled: 1
+    path: Assets/Scene/Long.unity
+    guid: fbcd433640513af4ca5a6f83f4313c44
+  m_configObjects: {}
